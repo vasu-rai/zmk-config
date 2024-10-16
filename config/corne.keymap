@@ -7,7 +7,6 @@
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/bt.h>
-#include <dt-bindings/zmk/mouse.h>
 
 #include <zmk/battery.h>
 #include <zmk/display.h>
@@ -17,6 +16,18 @@
 
 // Define the custom key behavior for capturing a screen portion
 #define KC_CPYP LGUI(LSFT(LCTL(KC_4)))  // Copy portion of screen
+
+behavior_cmd_sticky: sticky_cmd {
+    compatible = "zmk,behavior-sticky-key";
+    label = "CMD Sticky";
+    bindings = <&kp LGUI>;
+};
+
+behavior_shift_sticky: sticky_shift {
+    compatible = "zmk,behavior-sticky-key";
+    label = "Shift Sticky";
+    bindings = <&kp LSHIFT>;
+};
 
 / {
     keymap {
