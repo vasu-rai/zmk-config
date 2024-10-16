@@ -8,49 +8,94 @@
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/bt.h>
 
+#include <dt-bindings/zmk/mouse.h>
+
+#include <zmk/battery.h>
+#include <zmk/display.h>
+#include <zmk/events/layer_state_changed.h>
+#include <zmk/keys.h>
+#include <zmk/keymap.h>
+
+CONFIG_ZMK_MOUSE=y
+
+// Function to return the name of the current layer
+const char *get_layer_name(void) {
+    switch (zmk_layer_state()) {
+        case 0:
+            return "Base Layer #1";
+        case 1:
+            return "Numpad #2";
+        case 2:
+            return "Shortcut #3";    
+        default:
+            return "#7";
+    }
+}
+
+// First OLED display function for showing the current layer
+
+void first_oled_render(struct zmk_widget *widget, lv_obj_t *screen) {
+    const char *layer_name = get_layer_name();
+    lv_label_set_text(lv_label_create(screen), layer_name);  // Displays the layer name
+}
+
+// Second OLED display function for showing battery level
+void second_oled_render(struct zmk_widget *widget, lv_obj_t *screen) {
+    int battery_percentage = zmk_battery_state_of_charge();
+    char battery_status[12];  // Buffer to hold battery percentage
+    snprintf(battery_status, sizeof(battery_status), "Bat: %d%%  #7", battery_percentage);  // Adds battery and #7
+    lv_label_set_text(lv_label_create(screen), battery_status);
+}
+
+// Register the OLED widgets to display layer and battery info
+ZMK_WIDGET(first_oled, first_oled_render);
+ZMK_WIDGET(second_oled, second_oled_render);
+
+void zmk_widgets_init(void) {
+    zmk_widget_init(first_oled, lv_scr_act());  // Initialize the first OLED (layer info)
+    zmk_widget_init(second_oled, lv_scr_act()); // Initialize the second OLED (battery level)
+}
+
+void zmk_widgets_update(void) {
+    zmk_widget_update(first_oled);   // Update first OLED
+    zmk_widget_update(second_oled);  // Update second OLED
+}
+
+#define KC_CPYP LGUI(LSFT(LCTL(KC_4)))  // Copy portion of screen
+
+
 / {
         keymap {
                 compatible = "zmk,keymap";
 
-                default_layer {
-// -----------------------------------------------------------------------------------------
-// |  TAB |  Q  |  W  |  E  |  R  |  T  |   |  Y  |  U   |  I  |  O  |  P  | BSPC |
-// | CTRL |  A  |  S  |  D  |  F  |  G  |   |  H  |  J   |  K  |  L  |  ;  |  '   |
-// | SHFT |  Z  |  X  |  C  |  V  |  B  |   |  N  |  M   |  ,  |  .  |  /  | ESC  |
-//                    | GUI | LWR | SPC |   | ENT | RSE  | ALT |
-                        bindings = <
-   &kp TAB   &kp Q &kp W &kp E &kp R &kp T   &kp Y &kp U  &kp I     &kp O   &kp P    &kp BSPC
-   &kp LCTRL &kp A &kp S &kp D &kp F &kp G   &kp H &kp J  &kp K     &kp L   &kp SEMI &kp SQT
-   &kp LSHFT &kp Z &kp X &kp C &kp V &kp B   &kp N &kp M  &kp COMMA &kp DOT &kp FSLH &kp ESC
-                  &kp LGUI &mo 1 &kp SPACE   &kp RET &mo 2 &kp RALT
-                        >;
-                };
-                lower_layer {
-// -----------------------------------------------------------------------------------------
-// |  TAB |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  | BSPC |
-// | BTCLR| BT1 | BT2 | BT3 | BT4 | BT5 |   | LFT | DWN |  UP | RGT |     |      |
-// | SHFT |     |     |     |     |     |   |     |     |     |     |     |      |
-//                    | GUI |     | SPC |   | ENT |     | ALT |
-                        bindings = <
-   &kp TAB    &kp N1       &kp N2       &kp N3       &kp N4       &kp N5         &kp N6   &kp N7   &kp N8 &kp N9    &kp N0 &kp BSPC
-   &bt BT_CLR &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_SEL 3 &bt BT_SEL 4   &kp LEFT &kp DOWN &kp UP &kp RIGHT &trans &trans
-   &kp LSHFT  &trans       &trans       &trans       &trans       &trans         &trans   &trans   &trans &trans    &trans &trans
-                                    &kp LGUI     &trans       &kp SPACE      &kp RET  &trans   &kp RALT
-                        >;
-                };
+                 default_layer {
+            bindings = <
+                &kp ESC    &kp Q    &kp W    &kp E   &kp R   &kp T       &kp Y   &kp U    &kp I    &kp O   &kp P    &kp BACKSLASH
+                &kp TAB    &kp A    &kp S    &kp D   &kp F   &kp G       &kp H   &kp J    &kp K    &kp L   &kp PLUS &kp MINUS
+                &kp LCTRL  &kp Z    &kp X    &kp C   &kp V   &kp B       &kp N   &kp M    &kp COMMA &kp DOT &kp QMARK &kp DEL
+                &sticky_shift &kp BSPC &kp SPC  &kp ENT &mo 1  &sticky_cmd
+            >;
+        };
+        
+             // Layer 1: Numpad Layer
+        numpad_layer {
+            bindings = <
+                &kp EXCL  &kp AT   &kp HASH &kp DOLLAR  &kp CARET  &kp AMPS   &kp PRCNT  &kp KP_N7  &kp KP_N8  &kp KP_N9 &kp KP_MULTIPLY &kp KP_DIVIDE
+                &kp LPAR  &kp RPAR &kp LT &kp UP  &kp GT  &kp GRAVE  &kp APOS &kp KP_4  &kp KP_5 &kp KP_6 &kp PLUS &kp MINUS
+                &kp LBKT &kp RBKT &kp LEFT &kp DOWN  &kp RIGHT &kp SEMI  &kp COMMA &kp KP_1 &kp KP_2 &kp KP_3 &kp KP_DOT &kp KP_EQUAL
+                &sticky_shift &kp BSPC &kp TAB &kp ENT &mo 2  &kp KP_0
+            >;
+        };
 
-                raise_layer {
-// -----------------------------------------------------------------------------------------
-// |  TAB |  !  |  @  |  #  |  $  |  %  |   |  ^  |  &  |  *  |  (  |  )  | BSPC |
-// | CTRL |     |     |     |     |     |   |  -  |  =  |  [  |  ]  |  \  |  `   |
-// | SHFT |     |     |     |     |     |   |  _  |  +  |  {  |  }  | "|" |  ~   |
-//                    | GUI |     | SPC |   | ENT |     | ALT |
-                        bindings = <
-   &kp  TAB  &kp EXCL &kp AT &kp HASH &kp DLLR &kp PRCNT   &kp CARET &kp AMPS  &kp ASTRK &kp LPAR &kp RPAR &kp BSPC
-   &kp LCTRL &trans   &trans &trans   &trans   &trans      &kp MINUS &kp EQUAL &kp LBKT  &kp RBKT &kp BSLH &kp GRAVE
-   &kp LSHFT &trans   &trans &trans   &trans   &trans      &kp UNDER &kp PLUS  &kp LBRC  &kp RBRC &kp PIPE &kp TILDE
-                             &kp LGUI &trans   &kp SPACE   &kp RET   &trans    &kp RALT
-                        >;
-                };
+                // Layer 2: shortcuts Layer
+        shortcuts_layer {
+            bindings = <
+                &kp C_PWR  &rgb_toggle &kp C_AC_DESKTOP_SHOW_ALL_WINDOWS  &kp C_AC_SEARCH   &kp PAGE_UP &kp PSCRN &kp ESC &kp F7 &kp F8 &kp F9 &kp C_BRIGHTNESS_INC &kp C_VOL_UP
+                &kp TAB  &kp K_CONTEXT_MENU &kp KC_CPYP  &none  &kp PAGE_DOWN  &none  &kp HOME &kp F4  &kp F5 &kp F6 &kp C_BRIGHTNESS_DEC &kp C_VOL_DN
+                &kp LEFT_ALT &kp C_PREV &none &none &none &kp C_NEXT &mo 0  &kp F1 &kp F2 &kp F3 &kp C_PLAY_PAUSE &kp END
+                &sticky_shift &kp BSPC &kp &sticky_cmd &kp ENT &mo 1  &kp C_MUTE
+            >;
+        };
+
         };
 };
