@@ -15,48 +15,6 @@
 #include <zmk/keys.h>
 #include <zmk/keymap.h>
 
-// Function to return the name of the current layer
-const char *get_layer_name(void) {
-    switch (zmk_layer_state()) {
-        case 0:
-            return "Base Layer #1";
-        case 1:
-            return "Numpad #2";
-        case 2:
-            return "Shortcut #3";    
-        default:
-            return "#7";
-    }
-}
-
-// First OLED display function for showing the current layer
-void first_oled_render(struct zmk_widget *widget, lv_obj_t *screen) {
-    const char *layer_name = get_layer_name();
-    lv_label_set_text(lv_label_create(screen), layer_name);  // Displays the layer name
-}
-
-// Second OLED display function for showing battery level
-void second_oled_render(struct zmk_widget *widget, lv_obj_t *screen) {
-    int battery_percentage = zmk_battery_state_of_charge();
-    char battery_status[12];  // Buffer to hold battery percentage
-    snprintf(battery_status, sizeof(battery_status), "Bat: %d%%", battery_percentage);  // Adds battery level
-    lv_label_set_text(lv_label_create(screen), battery_status);
-}
-
-// Register the OLED widgets to display layer and battery info
-ZMK_WIDGET(first_oled, first_oled_render);
-ZMK_WIDGET(second_oled, second_oled_render);
-
-void zmk_widgets_init(void) {
-    zmk_widget_init(first_oled, lv_scr_act());  // Initialize the first OLED (layer info)
-    zmk_widget_init(second_oled, lv_scr_act()); // Initialize the second OLED (battery level)
-}
-
-void zmk_widgets_update(void) {
-    zmk_widget_update(first_oled);   // Update first OLED
-    zmk_widget_update(second_oled);  // Update second OLED
-}
-
 // Define the custom key behavior for capturing a screen portion
 #define KC_CPYP LGUI(LSFT(LCTL(KC_4)))  // Copy portion of screen
 
